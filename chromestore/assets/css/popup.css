@@ -1,0 +1,28 @@
+body {
+    min-width:500px;
+}
+
+.btn:focus {
+    outline: none;
+}
+
+.url-entry {
+    max-width:100px;
+    max-height:10px;
+    overflow:scroll;
+}
+
+#instructions-button {
+    margin-top:10px;
+    margin-bottom: 10px;
+}
+
+li {
+    padding-bottom:1px;
+}
+
+#logo {
+    max-width:20%;
+    max-height:20%;
+    display:inline;
+}
