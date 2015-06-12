@@ -102,10 +102,11 @@ var monitorInputs = function()
     //on an input click, add the input data to your 'data'
     $('body').click(function(event){
         if(active) {
-            var name = $(event.target).name ? $(event.target).name : $(event.target).text();
-            var value = $(event.target).text();
+            var value = $(event.target).children().remove().end().text().trim();
+            var name = value;
             var inputsLength = inputs.length;
             inputs[name] = value;
+            event.preventDefault();
         }
         else {
             returnInputs();
@@ -168,10 +169,8 @@ var deploy = function(data)
     userInputReceived = false;
     $('body *').unbind();
     $('body *').click(function(event){
-        //$(event.target).text(data[Object.keys(data)[0]]);
         var currentText = $(event.target).val();
         $(event.target).val(currentText + "" + data[Object.keys(data)[0]]);
-        //$(event.target).attr('value', data[Object.keys(data)[0]]);
         delete data[Object.keys(data)[0]];
         userInputReceived = true;
         $('body *').unbind();

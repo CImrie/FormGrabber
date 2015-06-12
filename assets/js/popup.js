@@ -80,7 +80,7 @@ var go = function () {
         }
         //build up whole table now
         console.log(key);
-        $('#sites tbody tr:last').after(
+        $('#sites-tbody > tr:last').after(
         '<tr data-toggle="collapse" data-target="#accordian-' + key + '" class="accordion-toggle">' +
             "<td>" + "<span id='"+key+"' class='lock-button btn btn-sm btn-default'>" + (stored[key].locked ? "<i id='"+key+"' class='fa fa-lock'></i>" : "<i id='"+key+"' class='fa fa-unlock-alt'></i>") + "</span>" /*+ stored[key].locked */+ "</td>" +
             "<td class='url-entry'>" + stored[key]['url'] + "</td>" +
