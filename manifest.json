@@ -1,0 +1,54 @@
+{
+  "manifest_version": 2,
+
+  "name": "Form Grabber",
+  "description": "A simple interface to bulk copy/paste form details.",
+  "version": "1.0.0",
+
+  "icons": {
+    "32": "assets/img/icon-32.png",
+    "48": "assets/img/icon-48.png",
+    "128": "assets/img/icon-128.png"
+  },
+
+  "browser_action": {
+    "default_icon": "assets/img/icon-19.png",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "background"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "assets/js/jquery-2.1.4.min.js",
+        "assets/js/bootbox.min.js",
+        "assets/js/background.js",
+        "assets/js/crawler.js",
+        "assets/js/moment.js"//,
+        //"assets/js/bootstrap.min.js"
+      ],
+      "css": [
+        "assets/css/style.css",
+        "assets/css/font-awesome.min.css"
+        //"assets/css/bootstrap.min.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    "assets/css/bootstrap.min.css",
+    "assets/js/jquery-2.1.4.min.js"
+  ],
+  "background": {
+    //"page" : "background.html",
+    "scripts": ["assets/js/background.js", "assets/js/jquery-2.1.4.min.js", /*"assets/css/bootstrap.min.css",*/ "assets/css/font-awesome.min.css"]
+  }
+}
