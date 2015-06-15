@@ -3,8 +3,9 @@
 
   "name": "Form Grabber",
   "description": "A simple interface to bulk copy/paste form details.",
-  "version": "1.0.0",
-
+  "version": "1.0.1",
+  "key":"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAofB/LnQK/fsnEWSKJSNm2Zz7u/BIpQt2WFom2SABrYkAna7Kx2M7T4xv1ZIPQu49MRj2m/v5bJjkS4/ZZxJr2cW23Rb6+LyjKB7TvkXCOv9SPA46IlOVAHGlj5kzTbys4NrWVv2hLnFcTlhsZKhYu/MgVLPBCV3SCaTiZkbV8c1T9W5p1XSiALx3R8b3YMRF4VVpqcQLAuxPL7VntsoUfkm6shdY5+6KSCHaSK0P8rlz+sqXY9SkKoLmVl43vWQyrhUL0MbbP5/eFp4NgqqLFyUAI/1GVKHps8Yg9RqgazC3rf4Vr/nsQgT01s/Nc84eyhNbe+4khjdKvIqeSaycaQIDAQAB",
+  "content_security_policy": "script-src 'self' https://apis.google.com; object-src 'self'",
   "icons": {
     "32": "assets/img/icon-32.png",
     "48": "assets/img/icon-48.png",
@@ -22,10 +23,12 @@
     "activeTab",
     "background",
     "identity",
-    "https://www.googleapis.com/"
+    "identity.email",
+    "https://accounts.google.com/*",
+    "https://www.googleapis.com/*"
   ],
   "oauth2": {
-    "client_id": "665859454684-s6nmohpktccl2srxvc67thbmpclpa36v.apps.googleusercontent.com",
+    "client_id": "513090491024-s8atoku95h5e7plmtqqfldeuq9ovv0na.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/plus.login",
       "https://www.googleapis.com/auth/chromewebstore.readonly"
@@ -37,24 +40,43 @@
         "<all_urls>"
       ],
       "js": [
+        "assets/js/require.js",
         "assets/js/jquery-2.1.4.min.js",
         "assets/js/bootbox.min.js",
-        "assets/js/background.js",
-        "assets/js/crawler.js",
-        "assets/js/moment.js"
+        "assets/js/moment.js",
+        "assets/js/classes/Message.js",
+        "assets/js/classes/Site.js",
+        "assets/js/classes/SiteManager.js",
+        "assets/js/crawler.js"
       ],
       "css": [
         "assets/css/style.css",
         "assets/css/font-awesome.min.css"
       ],
-      "run_at": "document_end"
+      "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
+    "https://apis.google.com/js/client.js",
+    "assets/js/require.js",
     "assets/css/bootstrap.min.css",
-    "assets/js/jquery-2.1.4.min.js"
+    "assets/css/font-awesome.min.css",
+    "assets/js/jquery-2.1.4.min.js",
+    "assets/fonts/*",
+    "https://accounts.google.com/*",
+    "https://www.googleapis.com/*"
   ],
   "background": {
-    "scripts": ["assets/js/background.js", "assets/js/jquery-2.1.4.min.js", "assets/css/font-awesome.min.css"]
+    "scripts": [
+      "assets/js/moment.js",
+      "assets/js/classes/User.js",
+      "assets/js/classes/LicenseManager.js",
+      "assets/js/classes/Message.js",
+      "assets/js/classes/Site.js",
+      "assets/js/classes/SiteManager.js",
+      "assets/js/jquery-2.1.4.min.js",
+      "assets/css/font-awesome.min.css",
+      "assets/js/background.js"
+    ]
   }
 }

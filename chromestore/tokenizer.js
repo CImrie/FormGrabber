@@ -6,6 +6,7 @@
 //also need to disable link redirection
 //.ticketpostcontentsdetailscontainer:first
 
+//tokenizer bookmarklet
 javascript:(function () {
     var script = document.createElement("script");
     script.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
@@ -43,29 +44,10 @@ javascript:(function () {
     }, 200);
 })();
 
-/*
 
 
-
- if($.trim( $(element).text() ).length > 0){
- var lines = $(element).text().split('\n');
- $.each(lines, function(i, v) {
- console.log('emptying element: -------- ' + $(element).text());
- $(element).empty();
- $(element).append($("<span>").text(" " + v)).append('</br>');
- });
- }
- $(element).click(function(event){
- event.preventDefault();
- });
-
-
-
-
- $(element).empty();
- var lines = $(element).text().split('\n');
- $.each(lines, function(i, v) {
- $(element).append($("<span>").text(" " + v))
- });
- $(element).find('span').append('</br>');
- */
+//close ticket bookmarklet
+javascript:(function () {
+    document.getElementById('selectgenticketstatusid').value = "6";
+    document.getElementById('View_Ticketform_submit_1').click();
+})();
