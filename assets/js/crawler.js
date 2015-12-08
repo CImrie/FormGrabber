@@ -1,29 +1,28 @@
-//chrome.runtime.sendMessage({greeting: "hello"}, function(response) {
-//    console.log(response.farewell);
-//});
 var active = true;
 var inputs = {};
-var superData = {};
+//var superData = {};
 var userInputReceived;
+var mouseX;
+var mouseY;
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        console.log('message received at crawler.js');
-        console.log(request);
+        //console.log('message received at crawler.js');
+        //console.log(request);
         if (request.command == "start"){
             crawl();
         }
         if (request.command == "deploy"){
-            console.log('deploying from crawler listener');
-            console.log('data given : ' + request.data);
+            //console.log('deploying from crawler listener');
+            //console.log('data given : ' + request.data);
             deploy(request.data);
         }
     });
 
 var crawl = function()
 {
-    //var a = chrome.extension.getURL("assets/css/bootstrap.min.css");
-    //$('<link rel="stylesheet" type="text/css" href="' + a + '" >').appendTo("head");
+    inputs = {};
+    active = true;
     monitorMouseoverInputs();
     monitorKeypresses();
     monitorInputs();
@@ -32,10 +31,7 @@ var crawl = function()
 var returnInputs = function()
 {
     if (!$.isEmptyObject(inputs)) {
-        console.log('crawler tried to send a message');
-        console.log(inputs);
         chrome.runtime.sendMessage({type: "site", data: inputs});
-        console.log('----- > sent');
         inputs = {};
     }
 };
@@ -45,9 +41,10 @@ var monitorKeypresses = function() {
         console.log('key pressed');
         //save inputs with enter key
         if (e.keyCode == 13) {
+            console.log('input terminated (pressed ENTER)');
             active = false;
             returnInputs();
-            e.stopPropagation();
+            e.preventDefault();
             stopKeypressMonitors();
             stopMonitorInputs();
             successMessage();
@@ -56,7 +53,7 @@ var monitorKeypresses = function() {
         if (e.which == 99)
         {
             e.preventDefault();
-            cancelledMessage("");
+            cancelledMessage();
             stopMonitorInputs();
             stopKeypressMonitors();
             inputs = {};
@@ -65,36 +62,29 @@ var monitorKeypresses = function() {
         if (e.which == 98)
         {
             e.preventDefault();
-            lastRemovedMessage("");
+            lastRemovedMessage();
             delete inputs[Object.keys(inputs)[Object.keys(inputs).length-1]];
-            //inputs[inputs.length-1] = null;
         }
     });
 };
 
 var successMessage = function()
 {
-    $('body').prepend('<div class="row"><div id="success-message-formgrabber" class="alert alert-success col-md-6 col-md-offset-3"><strong>POW!</strong> (stored) </div></div>');
-    $('#success-message-formgrabber').attr('style', 'z-index:999999');
-    setTimeout(function(){
-        $('#success-message-formgrabber').remove();
-    }, 2000);
+    var success = new Message('body', 'success-message-formgrabber','alert alert-success col-md-6 col-md-offset-3', '<strong>Everything stored</strong>')
+        .show()
+        .timeout(2000);
 };
-var cancelledMessage = function(message)
+var cancelledMessage = function()
 {
-    $('body').prepend('<div class="row"><div id="cancelled-message-formgrabber" class="alert alert-danger col-md-6 col-md-offset-3"><strong>' + (message == "" ? "Major non-pow!-al" : message) + '</strong></div></div>');
-    $('#cancelled-message-formgrabber').attr('style', 'z-index:999999');
-    setTimeout(function(){
-        $('#cancelled-message-formgrabber').remove();
-    }, 2000);
+    var cancelled = new Message('body', 'cancelled-message-formgrabber','alert alert-danger col-md-6 col-md-offset-3', '<strong>Cancelled</strong> (full stop)')
+        .show()
+        .timeout(2000);
 };
 var lastRemovedMessage = function(message)
 {
-    $('body').prepend('<div class="row"><div id="mistake-message-formgrabber" class="alert alert-info col-md-6 col-md-offset-3"><strong>' + (message == "" ? "Un-</strong>pow!" : message + "</strong>") + '</div></div>');
-    $('#mistake-message-formgrabber').attr('style', 'z-index:999999');
-    setTimeout(function(){
-        $('#mistake-message-formgrabber').remove();
-    }, 2000);
+    var removed = new Message('body', 'mistake-message-formgrabber','alert alert-info col-md-6 col-md-offset-3', '<strong>Last click forgotten... please proceed</strong>')
+        .show()
+        .timeout(2000);
 }
 
 var monitorInputs = function()
@@ -102,7 +92,10 @@ var monitorInputs = function()
     //on an input click, add the input data to your 'data'
     $('body').click(function(event){
         if(active) {
-            var value = $(event.target).children().remove().end().text().trim();
+            var value = $(event.target).text();
+            if(event.target.nodeName.toLowerCase() === "input"){
+                value = $(event.target).val();
+            }
             var name = value;
             var inputsLength = inputs.length;
             inputs[name] = value;
@@ -138,33 +131,23 @@ var monitorMouseoverInputs = function()
 
 var stopKeypressMonitors = function()
 {
-    //$(document).removeEventListener('keypress');
     $(document).unbind('keypress');
 }
 
 var stopMonitorInputs = function()
 {
-    //$('body').removeEventListener('click');
     $('body').trigger('mouseout');
     $('body').unbind('mouseover mouseout click');
     $('body *').unbind();
 }
 
-var checkIfEmpty = function(ad){
-    for(var prop in ad) {
-        if (ad.hasOwnProperty(prop)) {
-            // handle prop as required
-            return false;
-        }
-    }
-    return true;
-}
-
 /** Deploy the information on to a new site forms*/
 var deploy = function(data)
 {
-    console.log('data deployed : ');
-    console.log(data);
+    $(document).on('mousemove', function(e){
+        mouseX = e.pageX;
+        mouseY = e.pageY;
+    });
     startInputFloat("click to place '" + data[Object.keys(data)[0]] + "'");
     userInputReceived = false;
     $('body *').unbind();
@@ -196,25 +179,29 @@ var deploy = function(data)
 var startInputFloat = function(message){
     startFloat(message, 'btn alert-info')
 }
-var startFloat = function(message, classText){
+var startFloat = function(message, classText) {
     //create div
     $('body').append('<div id="float">' + message + '</div>');
+    $('#float').css('z-index', 999999);
+    $('#float').css('position', 'absolute');
+    $('#float').addClass(classText);
     //float it
-    $(document).on('mousemove', function(e){
-        $('#float').css({
-            left:  e.pageX + 30,
-            top:   e.pageY + 30
-        });
-        $('#float').css('z-index', 999999);
-        $('#float').css('position', 'absolute');
-        $('#float').addClass(classText);
+    $('#float').css({
+        left: mouseX + 30,
+        top: mouseY + 30
     });
-}
+    $(document).on('mousemove', function (e) {
+        $('#float').css({
+            left: e.pageX + 30,
+            top: e.pageY + 30
+        });
+    });
+};
 
 var startFinishedFloat = function()
 {
     stopFloat();
-    startFloat('All done <i class="fa fa-smile-o"></i>', 'btn btn-lg alert-success');
+    startFloat('All done <span class="fa fa-smile-o"></span>', 'btn btn-lg alert-success');
     setTimeout(stopFloat, 1500);
 }
 

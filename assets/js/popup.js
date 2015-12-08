@@ -3,22 +3,6 @@
  */
 //chrome.tabs.insertCSS(null, {file:"assets/css/bootstrap.min.css"});
 var sites;
-var port = chrome.runtime.connect({name:"background"});
-port.onMessage.addListener(function(msg) {
-    console.log(msg);
-    switch(msg.type){
-        case "sites":
-            switch(msg.sites){
-                case "sites":
-                    //update sites
-                    alert('got sites');
-                    console.log(msg.sites);
-                    sites = msg.sites;
-                break;
-            }
-        break;
-    }
-});
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
     var bkg = chrome.extension.getBackgroundPage();
@@ -30,6 +14,13 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse){
                 //chrome.runtime.reload();
                refreshMe();
            };
+       break;
+       case "license-response":
+           //console.log('license from bg');
+           //console.log(message);
+           if(message.valid){
+               activeLicense = true;
+           }
        break;
    }
 });
@@ -70,57 +61,70 @@ $(document).ready(function(){
     }
  */
 var go = function () {
-    var stored = JSON.parse(localStorage.getItem('sites'));
-    console.log(stored);
-    for (var key in stored) {
+    // chrome.extension.sendMessage({type:"license-check"}, function(response) {
+    //     if (response.valid) {
+    //         var stored = new SiteManager().sites();
+    //         buildUpTable(stored);
+    //     }else {
+    //         unlicensedGo();
+    //     }
+    // });
+
+    var stored = new SiteManager().sites();
+    buildUpTable(stored);
+    
+};
+
+var buildUpTable = function(stored){
+    for (var site in stored) {
         //build up accordian table for this element
         var accRows = "";
-        for(var input in stored[key]['data']){
+        for(var input in stored[site]['data']){
             accRows+='<tr><td>"'+ input +'"</td></tr>';
         }
         //build up whole table now
-        console.log(key);
+        //console.log(site);
         $('#sites-tbody > tr:last').after(
-        '<tr data-toggle="collapse" data-target="#accordian-' + key + '" class="accordion-toggle">' +
-            "<td>" + "<span id='"+key+"' class='lock-button btn btn-sm btn-default'>" + (stored[key].locked ? "<i id='"+key+"' class='fa fa-lock'></i>" : "<i id='"+key+"' class='fa fa-unlock-alt'></i>") + "</span>" /*+ stored[key].locked */+ "</td>" +
-            "<td class='url-entry'>" + stored[key]['url'] + "</td>" +
-            "<td>" + moment(stored[key]['added']).fromNow() + "</td>" +
-            "<td>" + '<span id="' + key + '" class="use-button btn btn-xs btn-default fa fa-download"</span>' + "</td>" +
-            "<td>" + '<span id="' + key + '" class="delete-button btn btn-xs btn-danger fa fa-remove"></span>' + "</td>" +
-        "</tr>" +
-        //hidden accordian row
-        '<tr>' +
+            '<tr data-toggle="collapse" data-target="#accordian-' + site + '" class="accordion-toggle">' +
+            "<td>" + "<span id='"+site+"' class='lock-button btn btn-sm btn-default'>" + (stored[site].locked ? "<i id='"+site+"' class='fa fa-lock'></i>" : "<i id='"+site+"' class='fa fa-unlock-alt'></i>") + "</span>" /*+ stored[key].locked */+ "</td>" +
+            "<td class='url-entry'>" + stored[site]['url'] + "</td>" +
+            "<td>" + moment(stored[site]['added']).fromNow() + "</td>" +
+            "<td>" + '<span id="' + site + '" class="use-button btn btn-xs btn-default fa fa-download"</span>' + "</td>" +
+            "<td>" + '<span id="' + site + '" class="delete-button btn btn-xs btn-danger fa fa-remove"></span>' + "</td>" +
+            "</tr>" +
+                //hidden accordian row
+            '<tr>' +
             '<td colspan="12" style="height:0px;">' +
-                '<div class="accordian-body collapse col-md-6 col-md-offset-3" id="accordian-' + key + '">' +
-                    '<table class="table table-striped">' +
-                        '<thead>' +
-                            '<tr><th>Data \'pieces\' stored</th></tr>' +
-                        '</thead>' +
-                        '<tbody>' +
-                            accRows +
-                        '</tbody>' +
-                    '</table>' +
-                '</div>' +
+            '<div class="accordian-body collapse col-md-6 col-md-offset-3" id="accordian-' + site + '">' +
+            '<table class="table table-striped">' +
+            '<thead>' +
+            '<tr><th>Data \'pieces\' stored</th></tr>' +
+            '</thead>' +
+            '<tbody>' +
+            accRows +
+            '</tbody>' +
+            '</table>' +
+            '</div>' +
             '</td>' +
-        '</tr>'
+            '</tr>'
         );
     }
-};
+}
 
 var ungo = function(){
-    $('#sites tbody > *:not(.do-not-remove)').empty();
+    $('#sites-tbody > *:not(.do-not-remove)').empty();
 }
 
-var getSites = function()
-{
-    port.postMessage({type:"command", command:"get-sites"});
-}
+//var getSites = function()
+//{
+//    port.postMessage({type:"command", command:"get-sites"});
+//}
 
 
 /** Message passing ----- */
 var startCrawl = function()
 {
-    console.log('trying to send start signal from popup to crawler');
+    //console.log('trying to send start signal from popup to crawler');
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {type:"command", command: "start"});
     });
@@ -136,12 +140,12 @@ var refreshMe = function()
 var toggleLock = function(key)
 {
     chrome.extension.sendMessage({type:"command", command:"toggle-lock", data:key});
-    console.log('sent command to toggle lock on ' + key);
+    //console.log('sent command to toggle lock on ' + key);
 }
 
 var deleteSite = function(key){
     chrome.extension.sendMessage({type:"command", command:"delete-site", data:key});
-    console.log('sent command to delete site ' + key);
+    //console.log('sent command to delete site ' + key);
 }
 
 var monitorButtons = function()
@@ -172,6 +176,13 @@ var clearAll = function()
 var useSite = function(site)
 {
     chrome.tabs.insertCSS(null, {file:"assets/css/bootstrap.min.css"});
+    chrome.tabs.insertCSS(null, {file:"assets/css/font-awesome.min.css"});
     chrome.extension.sendMessage({type:"command", command:"use-site", data:site});
     window.close();
+}
+
+var unlicensedGo = function()
+{
+    $('#body-container').empty();
+    $('#body-container').append('<span class="alert alert-danger">').text("Your license is inactive. Please make payment.");
 }

@@ -6,10 +6,11 @@ var CLIENT_ID = "513090491024-s8atoku95h5e7plmtqqfldeuq9ovv0na.apps.googleuserco
 var SCOPES = ["https://www.googleapis.com/auth/plus.login",
     "https://www.googleapis.com/auth/chromewebstore.readonly"];
 var currentLicense;
-var GRACE_PERIOD_OFFLINE_HRS = 24;
+var GRACE_PERIOD_OFFLINE_HRS = 48;
 
 function LicenseManager(){
     this.user = new User();
+    this.checkWithGoogle();
     this.licenseRefresh();
 }
 
@@ -27,31 +28,38 @@ LicenseManager.prototype = {
     licenseRefresh: function(){
         var cachedOn = localStorage.getItem('formgrabber-license-checked');
         var license = JSON.parse(localStorage.getItem('formgrabber-license'));
-        currentLicense = license;
-        this.isActive(license,cachedOn);
+        if(license == undefined){
+            this.checkWithGoogle();
+        } else {
+          currentLicense = license;
+          this.currentLicense = license;
+          this.isActive(license,cachedOn);
+        }
     },
 
     //handle response of an API call (license) and determine if the user has access (caching etc)
     isActive: function(license, cachedOn){
-        console.log("Time since cached: " + (Date.now()-cachedOn)/1000);
+      // console.log(license);
+        // console.log("Time since cached: " + (Date.now()-cachedOn)/1000);
         timeSince = (Math.abs((Date.now()-cachedOn)/(1000)));
         if(timeSince > license.maxAgeSecs){
             if(!this.parseLicenseJSON(license)){
                 //only refresh if invalid license otherwise use grace
-                console.log('refreshing cache license');
+                //console.log('refreshing cache license');
                 this.checkWithGoogle();
             }
-            console.log('hours since cached: ' + timeSince/(60*60));
+            //console.log('hours since cached: ' + timeSince/(60*60));
             if(timeSince/(60*60) > GRACE_PERIOD_OFFLINE_HRS){
                 console.log('refreshing cache license');
                 this.checkWithGoogle();
             }
         }
         else {
-            console.log('doing someting else');
-            console.log(license);
+            //console.log('doing someting else');
+            //console.log(license);
             if(this.parseLicenseJSON(license)){
                 currentLicense = license;
+                this.currentLicense = license;
             }
         }
     },

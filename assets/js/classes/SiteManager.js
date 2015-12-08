@@ -24,7 +24,7 @@ SiteManager.prototype = {
     },
 
     save : function(){
-        console.log('saving sites');
+        //console.log('saving sites');
         var siteArray = {};
         for (var siteKey in this._sites){
             siteArray[siteKey] = this._sites[siteKey].toObject();
@@ -51,13 +51,13 @@ SiteManager.prototype = {
     },
 
     addSite: function(site){
-        console.log('adding site');
-        console.log(site);
+        //console.log('adding site');
+        //console.log(site);
         this._sites[Object.keys(this._sites).length] = site;
-        console.log(this._sites);
+        //console.log(this._sites);
         this.save();
-        console.log('now saved');
-        console.log(this.sites());
+        //console.log('now saved');
+        //console.log(this.sites());
         return this;
     },
 
@@ -71,7 +71,13 @@ SiteManager.prototype = {
 
     clearSites : function(){
         //delete this._sites;
-        this._sites = {};
+        for (var key in Object.keys(this._sites))
+        {
+            if(!this._sites[key].locked){
+                delete this._sites[key];
+            }
+        }
+        //this._sites = {};
         this.save();
         return this;
     },

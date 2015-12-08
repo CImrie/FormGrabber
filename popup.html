@@ -2,17 +2,23 @@
 <head>
     <title>FormGrabber</title>
     <script src="assets/js/jquery-2.1.4.min.js" type="text/javascript"></script>
+    <script src="assets/js/moment.js" type="text/javascript"></script>
+    <!--<script src="https://apis.google.com/js/client.js?onload=authoriseLicenseManager"></script>-->
+    <script src="assets/js/classes/User.js" type="text/javascript"></script>
+    <script src="assets/js/classes/LicenseManager.js" type="text/javascript"></script>
+    <script src="assets/js/classes/Site.js" type="text/javascript"></script>
+    <script src="assets/js/classes/SiteManager.js" type="text/javascript"></script>
     <script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="assets/js/bootbox.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
     <script src="assets/js/popup.js" type="text/javascript"></script>
-    <script src="assets/js/moment.js" type="text/javascript"></script>
+
 
     <link rel="stylesheet" href="assets/css/popup.css" />
     <link rel="stylesheet" href="assets/css/font-awesome.min.css" />
 </head>
 <body>
-    <div class="container-fluid">
+    <div id="body-container" class="container-fluid">
         <h1 class="text-center">Form Grabber <img id="logo" class="img-responsive" src="assets/img/resistance-logo.png"/></h1>
         <div data-toggle="collapse" data-target="#instructions-panel" class="accordion-toggle">
             <span id="instructions-button" class="btn btn-default btn-block col-md-12">Instructions</span>
@@ -51,7 +57,7 @@
         </div>
         <div class="well-md" style="padding-top:10px">
             <div id="clear-all" class="btn btn-danger col-md-2 pull-right"><i class="fa fa-exclamation-triangle"></i> Forget all</div>
-            <table id="sites" class="table table-hover">
+            <table id="sites" class="table table-striped">
                 <thead>
                     <tr>
                         <th>Lock</th>
