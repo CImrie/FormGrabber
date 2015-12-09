@@ -1,0 +1,17 @@
+.fg-hover {
+  transition: 0.2s ease;
+  border-bottom: 8px solid #febc01;
+  &, * {
+    background-color: #fed254 !important;
+    opacity:1 !important;
+  }
+  & :not(.fg-hover) {
+    opacity: 0.9;
+  }
+}
+
+.fg-clicked {
+  transition: 0.2s ease;
+  border-bottom: 8px solid #B9EB6C;
+  background-color: #d0f29c;
+}
