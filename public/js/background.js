@@ -10540,10 +10540,26 @@ var vm = new listenerVue({
     methods: {
         save: function save() {
             localStorage.setItem('formgrabber-sites', JSON.stringify(this.sites));
-        }
+        },
+        indexOfSite: function indexOfSite(site) {
+            var index = this.sites.indexOf(site);
+            if (index != -1) {
+                return index;
+            }
+            for (var key in this.sites) {
+                var current = this.sites[key];
+                var matches = current.added == site.added && current.locked == site.locked && current.url == site.url;
+                if (matches) {
+                    return key;
+                }
+            }
+            return -1;
+        },
+        isLicenseCached: function isLicenseCached() {}
     },
     events: {
         'grab-complete': function grabComplete(site) {
+            console.log('background.js grab complete triggered');
             //Using arrays in v2.0.0 instead of objects. To prevent loss of data we convert the old object to an array
             if (Object.prototype.toString.call(this.sites) != '[object Array]') {
                 console.log('not an array - converting');
@@ -10555,7 +10571,16 @@ var vm = new listenerVue({
 
             this.sites.push(site);
             this.save();
-            //localStorage.setItem('formgrabber-sites', JSON.stringify(this.sites));
+        },
+        'remove-all': function removeAll() {
+            var newSites = [];
+            for (var key in this.sites) {
+                if (this.sites[key].locked) {
+                    newSites.push(this.sites[key]);
+                }
+            }
+            this.sites = newSites;
+            this.save();
         },
         'remove-site': function removeSite(index) {
             if (index != -1) {
@@ -10566,6 +10591,25 @@ var vm = new listenerVue({
         'toggle-lock-site': function toggleLockSite(index) {
             this.sites[index].locked = !this.sites[index].locked;
             this.save();
+        },
+
+        'use-site-complete': function useSiteComplete(site) {
+            console.log('use-site-complete detected in background');
+            console.log(site);
+            if (!site.locked) {
+                var index = this.indexOfSite(site);
+                console.log(index);
+                if (index != -1) {
+                    this.sites.splice(index, 1);
+                }
+            }
+            this.save();
+        },
+
+        /* --- License Events --- */
+        'license-check': function licenseCheck() {
+            console.log('checked');
+            this.$emit('send', 'license-checked', true);
         }
     }
 });
@@ -10591,14 +10635,17 @@ module.exports = {
     },
     events: {
         'send': function send(name, data) {
+            console.log('sending message: ' + name);
             this.send({ name: name, data: data });
         }
     },
     ready: function ready() {
         var vm = this;
         chrome.runtime.onMessage.addListener(function (event) {
-            vm.$dispatch(event.name, event.data);
-            vm.$broadcast(event.name, event.data);
+            console.log('received message: ' + event.name);
+            //                vm.$dispatch(event.name, event.data);
+            //                vm.$broadcast(event.name, event.data);
+            vm.$emit(event.name, event.data);
         });
     }
 };

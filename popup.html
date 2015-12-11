@@ -1,26 +1,38 @@
 <html>
 <head>
-    <title>FormGrabber</title>
-
+    <title>Form Grabber Extension</title>
     <link rel="stylesheet" href="public/css/main.css" />
-    <link rel="stylesheet" href="assets/css/popup.css" />
 </head>
 <body>
-    <div id="body-container" class="container-fluid">
-        <h1 class="text-center">Form Grabber <img id="logo" class="img-responsive" src="assets/img/resistance-logo.png"/></h1>
-        <fg-guide></fg-guide>
-        <div class="row">
-            <div class="col-md-6 col-md-offset-3">
-                <button id="grab"
-                        class="btn btn-default btn-success col-md-12 btn-block"
-                        v-on:click="grab"
-                >Start Grabbing</button>
+    <div class="fg-navbar">
+        <div class="logo-container">
+            <img class="logo button" src="public/images/fg-colour-logo-vibrant-2-aligned-01-01.png" v-on:click="grab" v-if="validLicense"/>
+            <img class="logo button" src="public/images/fg-colour-logo-vibrant-2-aligned-01-01.png" v-if="! validLicense"/>
+        </div>
+        <div id="menu">
+            <fg-dropdown-button class="fg-menu-button fg-on-top"></fg-dropdown-button>
+        </div>
+    </div>
+        <div class="app" v-if="validLicense">
+            <fg-sites :sites="sites">
+            </fg-sites>
+        </div>
+        <div class="container error" v-if="! validLicense">
+            <div class="alert alert-danger">
+                <h4>Your license is currently inactive.</h4>
+                <p>Here are some possible reasons for this message:</p>
+                <ul>
+                    <li>You have reached the end of your trial and have not paid the subscription fee.</li>
+                    <li>You have not had an internet connection for approximately 48hours (the app-license grace period).</li>
+                </ul>
+                <hr />
+                <p><strong>If you believe this is in error please contact support at support@randomstate.co.uk</strong></p>
             </div>
         </div>
-        <fg-sites :sites="sites">
-        </fg-sites>
     </div>
+    <footer class="text-center">
+        <small class="grey"><a href="http://randomstate.co.uk" target="_blank">Random State</a></small>
+    </footer>
 </body>
 </html>
-<div class="alert-info"></div>
 <footer><script src="public/js/popup.js" type="text/javascript"></script></footer>

@@ -24,10 +24,31 @@ var vm = new listenerVue({
     methods: {
         save: function(){
             localStorage.setItem('formgrabber-sites', JSON.stringify(this.sites));
+        },
+        indexOfSite: function(site){
+            var index = this.sites.indexOf(site);
+            if(index != -1){
+                return index;
+            }
+            for(var key in this.sites){
+                var current = this.sites[key];
+                var matches =
+                    current.added == site.added
+                &&  current.locked == site.locked
+                &&  current.url == site.url;
+                if(matches){
+                    return key;
+                }
+            }
+            return -1;
+        },
+        isLicenseCached: function(){
+
         }
     },
     events: {
         'grab-complete': function(site){
+            console.log('background.js grab complete triggered');
             //Using arrays in v2.0.0 instead of objects. To prevent loss of data we convert the old object to an array
             if(Object.prototype.toString.call( this.sites ) != '[object Array]'){
                 console.log('not an array - converting');
@@ -37,7 +58,16 @@ var vm = new listenerVue({
 
             this.sites.push(site);
             this.save();
-            //localStorage.setItem('formgrabber-sites', JSON.stringify(this.sites));
+        },
+        'remove-all': function(){
+            var newSites = [];
+            for(var key in this.sites){
+                if(this.sites[key].locked){
+                    newSites.push(this.sites[key]);
+                }
+            }
+            this.sites = newSites;
+            this.save();
         },
         'remove-site': function(index){
             if(index != -1){
@@ -48,6 +78,25 @@ var vm = new listenerVue({
         'toggle-lock-site': function(index){
             this.sites[index].locked = ! this.sites[index].locked;
             this.save();
+        },
+
+        'use-site-complete': function(site){
+            console.log('use-site-complete detected in background');
+            console.log(site);
+            if(! site.locked){
+                var index = this.indexOfSite(site);
+                console.log(index);
+                if(index != -1){
+                    this.sites.splice(index,1);
+                }
+            }
+            this.save();
+        },
+
+        /* --- License Events --- */
+        'license-check': function(){
+            console.log('checked');
+            this.$emit('send', 'license-checked', true);
         }
     }
 });

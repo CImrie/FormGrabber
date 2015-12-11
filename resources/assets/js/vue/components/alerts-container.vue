@@ -1,6 +1,6 @@
 <template>
     <div id="fg-alerts-container">
-        <fg-alert v-for="alert in alerts" :type="alert.type" :message="alert.body" :heading="alert.heading"></fg-alert>
+        <fg-alert v-for="alert in alerts" :button="alert.button" :type="alert.type" :message="alert.body" :heading="alert.heading"></fg-alert>
     </div>
 </template>
 

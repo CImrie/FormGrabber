@@ -3,13 +3,15 @@ var Vue = require('vue');
 var listeningPost = require('./vue/components/listening-post.vue');
 var listenerVue = Vue.extend(listeningPost);
 var alertsContainer = require('./vue/components/alerts-container.vue');
+var float = require('./vue/components/float.vue');
 
 new listenerVue({
 
     el: 'body',
 
     components: {
-        "fg-alerts-container" : alertsContainer
+        "fg-alerts-container" : alertsContainer,
+        "fg-float": float
     },
 
     props: {
@@ -29,13 +31,20 @@ new listenerVue({
                 data: this.chunks,
                 locked: false
             }
+        },
+        hideFloat: function(message){
+            this.$broadcast('hide-float', message);
+        },
+        showFloat: function(message){
+            this.$broadcast('show-float', message);
         }
     },
 
     data: function(){
         return {
             crawler: {},
-            alerts: []
+            alerts: [],
+            floatMessage: ""
         }
     },
 
@@ -44,8 +53,13 @@ new listenerVue({
         this.crawler = new Crawler(this, ['#fg-alerts-container', '.fg-alert', '.fg-alert *']);
 
         var body = this.$el;
+        /* --- Alerts Region at right-hand side --- */
         var element = $(body).append('<fg-alerts-container :alerts="alerts"></fg-alerts-container>');
         this.$compile(element.get(0));
+
+        /* --- Floating Window that follows mouse --- */
+        var floatElement = $(body).append('<fg-float></fg-float>');
+        this.$compile(floatElement.get(0));
     },
 
     events: {
@@ -60,31 +74,47 @@ new listenerVue({
             }
         },
 
-        'grab-complete': function(e){
+        'crawler-grab-complete': function(e){
+            console.log('crawler grab completed');
             this.$emit('send', 'grab-complete', this.site());
-            console.log('grab-complete sent to listeners');
             this.alerts = []; //clear all alerts
             this.chunks = []; //reset data
-            this.$emit('alert-success', 'Success', 'You can now use the copied data via the extension' );
+            this.$emit('alert-success', 'Success', 'You can now use the copied data via the extension.' );
         },
 
-        'grab-cancelled': function(e){
-            //this.$emit('send', 'grab-cancelled', {});
+        'crawler-grab-cancelled': function(e){
+            this.$emit('send', 'grab-cancelled', {});
             this.alerts = [];
             this.chunks = [];
-            this.$emit('alert-error', 'Cancelled', 'You cancelled the script. Start over via the extension if you want to begin again');
+            var self = this;
+            this.$emit('alert-error', 'Cancelled', 'You cancelled the script. Start over via the extension or click below.', {text: "Start Over", onClick: function(e){
+                self.alerts = [];
+                e.stopImmediatePropagation();
+                self.$dispatch('grab');
+            }});
         },
 
-        'alert-success': function(heading, body){
-            this.alerts.push({type: "success", heading: heading, body: body})
+        'crawler-deploy-cancelled': function(e){
+            this.alerts = [];
+            this.hideFloat();
+            this.$emit('alert-error', 'Cancelled', 'You cancelled the script. To re-attempt pasting, go to the extension window.');
         },
 
-        'alert-warning': function(heading, body){
-            this.alerts.push({type: "warning", heading: heading, body: body});//"<strong>Removed the item </strong><small><em>\"" + data + "\"</em></small><strong> from the list</strong>"});
+        'deploy-site': function(site){
+            console.log('deploying site');
+            this.crawler.paste(site);
         },
 
-        'alert-error': function(heading, body){
-            this.alerts.push({type: "error", heading: heading, body: body});
+        'alert-success': function(heading, body, button){
+            this.alerts.push({type: "success", heading: heading, body: body, button: button})
+        },
+
+        'alert-warning': function(heading, body, button){
+            this.alerts.push({type: "warning", heading: heading, body: body, button: button});
+        },
+
+        'alert-error': function(heading, body, button){
+            this.alerts.push({type: "error", heading: heading, body: body, button: button});
         }
     }
 });

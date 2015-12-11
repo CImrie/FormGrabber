@@ -9665,13 +9665,15 @@ var Vue = require('vue');
 var listeningPost = require('./vue/components/listening-post.vue');
 var listenerVue = Vue.extend(listeningPost);
 var alertsContainer = require('./vue/components/alerts-container.vue');
+var float = require('./vue/components/float.vue');
 
 new listenerVue({
 
     el: 'body',
 
     components: {
-        "fg-alerts-container": alertsContainer
+        "fg-alerts-container": alertsContainer,
+        "fg-float": float
     },
 
     props: {
@@ -9691,13 +9693,20 @@ new listenerVue({
                 data: this.chunks,
                 locked: false
             };
+        },
+        hideFloat: function hideFloat(message) {
+            this.$broadcast('hide-float', message);
+        },
+        showFloat: function showFloat(message) {
+            this.$broadcast('show-float', message);
         }
     },
 
     data: function data() {
         return {
             crawler: {},
-            alerts: []
+            alerts: [],
+            floatMessage: ""
         };
     },
 
@@ -9706,8 +9715,13 @@ new listenerVue({
         this.crawler = new Crawler(this, ['#fg-alerts-container', '.fg-alert', '.fg-alert *']);
 
         var body = this.$el;
+        /* --- Alerts Region at right-hand side --- */
         var element = $(body).append('<fg-alerts-container :alerts="alerts"></fg-alerts-container>');
         this.$compile(element.get(0));
+
+        /* --- Floating Window that follows mouse --- */
+        var floatElement = $(body).append('<fg-float></fg-float>');
+        this.$compile(floatElement.get(0));
     },
 
     events: {
@@ -9722,36 +9736,52 @@ new listenerVue({
             }
         },
 
-        'grab-complete': function grabComplete(e) {
+        'crawler-grab-complete': function crawlerGrabComplete(e) {
+            console.log('crawler grab completed');
             this.$emit('send', 'grab-complete', this.site());
-            console.log('grab-complete sent to listeners');
             this.alerts = []; //clear all alerts
             this.chunks = []; //reset data
-            this.$emit('alert-success', 'Success', 'You can now use the copied data via the extension');
+            this.$emit('alert-success', 'Success', 'You can now use the copied data via the extension.');
         },
 
-        'grab-cancelled': function grabCancelled(e) {
-            //this.$emit('send', 'grab-cancelled', {});
+        'crawler-grab-cancelled': function crawlerGrabCancelled(e) {
+            this.$emit('send', 'grab-cancelled', {});
             this.alerts = [];
             this.chunks = [];
-            this.$emit('alert-error', 'Cancelled', 'You cancelled the script. Start over via the extension if you want to begin again');
+            var self = this;
+            this.$emit('alert-error', 'Cancelled', 'You cancelled the script. Start over via the extension or click below.', { text: "Start Over", onClick: function onClick(e) {
+                    self.alerts = [];
+                    e.stopImmediatePropagation();
+                    self.$dispatch('grab');
+                } });
         },
 
-        'alert-success': function alertSuccess(heading, body) {
-            this.alerts.push({ type: "success", heading: heading, body: body });
+        'crawler-deploy-cancelled': function crawlerDeployCancelled(e) {
+            this.alerts = [];
+            this.hideFloat();
+            this.$emit('alert-error', 'Cancelled', 'You cancelled the script. To re-attempt pasting, go to the extension window.');
         },
 
-        'alert-warning': function alertWarning(heading, body) {
-            this.alerts.push({ type: "warning", heading: heading, body: body }); //"<strong>Removed the item </strong><small><em>\"" + data + "\"</em></small><strong> from the list</strong>"});
+        'deploy-site': function deploySite(site) {
+            console.log('deploying site');
+            this.crawler.paste(site);
         },
 
-        'alert-error': function alertError(heading, body) {
-            this.alerts.push({ type: "error", heading: heading, body: body });
+        'alert-success': function alertSuccess(heading, body, button) {
+            this.alerts.push({ type: "success", heading: heading, body: body, button: button });
+        },
+
+        'alert-warning': function alertWarning(heading, body, button) {
+            this.alerts.push({ type: "warning", heading: heading, body: body, button: button });
+        },
+
+        'alert-error': function alertError(heading, body, button) {
+            this.alerts.push({ type: "error", heading: heading, body: body, button: button });
         }
     }
 });
 
-},{"./vue/components/alerts-container.vue":6,"./vue/components/listening-post.vue":8,"vue":3}],6:[function(require,module,exports){
+},{"./vue/components/alerts-container.vue":6,"./vue/components/float.vue":8,"./vue/components/listening-post.vue":9,"vue":3}],6:[function(require,module,exports){
 var __vueify_style__ = require("vueify-insert-css").insert("\n    #fg-alerts-container[_v-ca21e9b0] {\n        z-index:9999999;\n        position:fixed;\n        height: 100%;\n        min-width:300px;\n        width:22%;\n        right:0;\n        bottom:0;\n        top:0;\n        /*background-color:grey;*/\n        pointer-events: none;\n        display: -webkit-box;\n        display: -webkit-flex;\n        display: -ms-flexbox;\n        display: flex;\n        -webkit-box-orient: vertical;\n        -webkit-box-direction: reverse;\n        -webkit-flex-direction: column-reverse;\n            -ms-flex-direction: column-reverse;\n                flex-direction: column-reverse;\n    }\n")
 "use strict";
 
@@ -9770,7 +9800,7 @@ module.exports = {
     }
 };
 if (module.exports.__esModule) module.exports = module.exports.default
-;(typeof module.exports === "function"? module.exports.options: module.exports).template = "\n    <div id=\"fg-alerts-container\" _v-ca21e9b0=\"\">\n        <fg-alert v-for=\"alert in alerts\" :type=\"alert.type\" :message=\"alert.body\" :heading=\"alert.heading\" _v-ca21e9b0=\"\"></fg-alert>\n    </div>\n"
+;(typeof module.exports === "function"? module.exports.options: module.exports).template = "\n    <div id=\"fg-alerts-container\" _v-ca21e9b0=\"\">\n        <fg-alert v-for=\"alert in alerts\" :button=\"alert.button\" :type=\"alert.type\" :message=\"alert.body\" :heading=\"alert.heading\" _v-ca21e9b0=\"\"></fg-alert>\n    </div>\n"
 if (module.hot) {(function () {  module.hot.accept()
   var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -9787,7 +9817,7 @@ if (module.hot) {(function () {  module.hot.accept()
   }
 })()}
 },{"./corner-alert.vue":7,"vue":3,"vue-hot-reload-api":2,"vueify-insert-css":4}],7:[function(require,module,exports){
-var __vueify_style__ = require("vueify-insert-css").insert("\n    .fg-pull-right[_v-4d5dbc41] {\n        float:right;\n    }\n\n    .fg-icon[_v-4d5dbc41] {\n        color:grey;\n        font-size: 0.85em;\n        pointer-events: auto;\n        cursor:pointer;\n    }\n\n    .fg-alert-heading[_v-4d5dbc41]{\n        font-size: 1.1em;\n        font-weight: bold;\n        padding-bottom:10px;\n    }\n    .fg-alert[_v-4d5dbc41] {\n        margin:15px;\n        margin-top: 0px;\n        padding:20px;\n    }\n\n    .fg-alert-success[_v-4d5dbc41] {\n        border-bottom: 8px solid #B9EB6C;\n        background-color: #d0f29c;\n        border-radius: 5px;\n    }\n\n    .fg-alert-warning[_v-4d5dbc41] {\n        border-bottom: 8px solid #FFB488;\n        background-color: #ffd5bd;\n        border-radius: 5px;\n    }\n\n    .fg-alert-error[_v-4d5dbc41] {\n        border-bottom: 8px solid #FF8693;\n        background-color: #ffbdc4;\n        border-radius: 5px;\n    }\n\n    .bounce-enter[_v-4d5dbc41] {\n        -webkit-animation: bounce-in .3s;\n                animation: bounce-in .3s;\n    }\n    .bounce-leave[_v-4d5dbc41] {\n        -webkit-animation: bounce-out .3s;\n                animation: bounce-out .3s;\n    }\n    @-webkit-keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @-webkit-keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n    @keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n\n")
+var __vueify_style__ = require("vueify-insert-css").insert("\n    .fg-pull-right[_v-4d5dbc41] {\n        float:right;\n    }\n\n    .fg-icon[_v-4d5dbc41] {\n        color:grey;\n        font-size: 0.85em;\n        pointer-events: auto;\n        cursor:pointer;\n    }\n\n    .fg-alert-heading[_v-4d5dbc41]{\n        font-size: 1.1em;\n        font-weight: bold;\n        padding-bottom:10px;\n    }\n\n    .fg-alert-button[_v-4d5dbc41] {\n        padding-top:10px;\n    }\n\n    .fg-alert-button button[_v-4d5dbc41]{\n        padding:10px;\n        font-weight:bold;\n\n        border: 1px solid rgb(248, 101, 116);\n        background-color: rgb(255, 134, 147);\n        border-radius:3px;\n        box-shadow: 0;\n\n        pointer-events:auto;\n        cursor:pointer;\n    }\n\n    .fg-alert-button button[_v-4d5dbc41]:focus {\n        outline:0;\n    }\n\n    .fg-alert[_v-4d5dbc41] {\n        margin:15px;\n        margin-top: 0px;\n        padding:20px;\n    }\n\n    .fg-alert-success[_v-4d5dbc41] {\n        border-bottom: 8px solid #B9EB6C;\n        background-color: #d0f29c;\n        border-radius: 5px;\n    }\n\n    .fg-alert-warning[_v-4d5dbc41] {\n        border-bottom: 8px solid #FFB488;\n        background-color: #ffd5bd;\n        border-radius: 5px;\n    }\n\n    .fg-alert-error[_v-4d5dbc41] {\n        border-bottom: 8px solid #FF8693;\n        background-color: #ffbdc4;\n        border-radius: 5px;\n    }\n\n    .bounce-enter[_v-4d5dbc41] {\n        -webkit-animation: bounce-in .3s;\n                animation: bounce-in .3s;\n    }\n    .bounce-leave[_v-4d5dbc41] {\n        -webkit-animation: bounce-out .3s;\n                animation: bounce-out .3s;\n    }\n    @-webkit-keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @-webkit-keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n    @keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n\n")
 "use strict";
 
 module.exports = {
@@ -9803,6 +9833,9 @@ module.exports = {
         type: {
             type: String,
             default: ""
+        },
+        button: {
+            type: Object
         }
     },
     computed: {
@@ -9827,14 +9860,14 @@ module.exports = {
     }
 };
 if (module.exports.__esModule) module.exports = module.exports.default
-;(typeof module.exports === "function"? module.exports.options: module.exports).template = "\n    <div v-bind:class=\"['fg-alert', alertClass ? alertClass : '']\" v-if=\"show\" transition=\"bounce\" _v-4d5dbc41=\"\">\n        <div class=\"fg-alert-heading\" _v-4d5dbc41=\"\">{{ heading }}</div>\n        <div _v-4d5dbc41=\"\">{{{ message }}}</div>\n    </div>\n"
+;(typeof module.exports === "function"? module.exports.options: module.exports).template = "\n    <div v-bind:class=\"['fg-alert', alertClass ? alertClass : '']\" v-if=\"show\" transition=\"bounce\" _v-4d5dbc41=\"\">\n        <div class=\"fg-alert-heading\" _v-4d5dbc41=\"\">{{ heading }}</div>\n        <div _v-4d5dbc41=\"\">{{{ message }}}</div>\n        <div class=\"fg-alert-button\" v-if=\"button != undefined\" _v-4d5dbc41=\"\"><button v-on:click=\"button.onClick\" _v-4d5dbc41=\"\">{{button.text}}</button></div>\n    </div>\n"
 if (module.hot) {(function () {  module.hot.accept()
   var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   var id = "/Users/connorimrie/Dropbox/Random State Software Development/FormGrabberExtension/resources/assets/js/vue/components/corner-alert.vue"
   module.hot.dispose(function () {
-    require("vueify-insert-css").cache["\n    .fg-pull-right[_v-4d5dbc41] {\n        float:right;\n    }\n\n    .fg-icon[_v-4d5dbc41] {\n        color:grey;\n        font-size: 0.85em;\n        pointer-events: auto;\n        cursor:pointer;\n    }\n\n    .fg-alert-heading[_v-4d5dbc41]{\n        font-size: 1.1em;\n        font-weight: bold;\n        padding-bottom:10px;\n    }\n    .fg-alert[_v-4d5dbc41] {\n        margin:15px;\n        margin-top: 0px;\n        padding:20px;\n    }\n\n    .fg-alert-success[_v-4d5dbc41] {\n        border-bottom: 8px solid #B9EB6C;\n        background-color: #d0f29c;\n        border-radius: 5px;\n    }\n\n    .fg-alert-warning[_v-4d5dbc41] {\n        border-bottom: 8px solid #FFB488;\n        background-color: #ffd5bd;\n        border-radius: 5px;\n    }\n\n    .fg-alert-error[_v-4d5dbc41] {\n        border-bottom: 8px solid #FF8693;\n        background-color: #ffbdc4;\n        border-radius: 5px;\n    }\n\n    .bounce-enter[_v-4d5dbc41] {\n        -webkit-animation: bounce-in .3s;\n                animation: bounce-in .3s;\n    }\n    .bounce-leave[_v-4d5dbc41] {\n        -webkit-animation: bounce-out .3s;\n                animation: bounce-out .3s;\n    }\n    @-webkit-keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @-webkit-keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n    @keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n\n"] = false
+    require("vueify-insert-css").cache["\n    .fg-pull-right[_v-4d5dbc41] {\n        float:right;\n    }\n\n    .fg-icon[_v-4d5dbc41] {\n        color:grey;\n        font-size: 0.85em;\n        pointer-events: auto;\n        cursor:pointer;\n    }\n\n    .fg-alert-heading[_v-4d5dbc41]{\n        font-size: 1.1em;\n        font-weight: bold;\n        padding-bottom:10px;\n    }\n\n    .fg-alert-button[_v-4d5dbc41] {\n        padding-top:10px;\n    }\n\n    .fg-alert-button button[_v-4d5dbc41]{\n        padding:10px;\n        font-weight:bold;\n\n        border: 1px solid rgb(248, 101, 116);\n        background-color: rgb(255, 134, 147);\n        border-radius:3px;\n        box-shadow: 0;\n\n        pointer-events:auto;\n        cursor:pointer;\n    }\n\n    .fg-alert-button button[_v-4d5dbc41]:focus {\n        outline:0;\n    }\n\n    .fg-alert[_v-4d5dbc41] {\n        margin:15px;\n        margin-top: 0px;\n        padding:20px;\n    }\n\n    .fg-alert-success[_v-4d5dbc41] {\n        border-bottom: 8px solid #B9EB6C;\n        background-color: #d0f29c;\n        border-radius: 5px;\n    }\n\n    .fg-alert-warning[_v-4d5dbc41] {\n        border-bottom: 8px solid #FFB488;\n        background-color: #ffd5bd;\n        border-radius: 5px;\n    }\n\n    .fg-alert-error[_v-4d5dbc41] {\n        border-bottom: 8px solid #FF8693;\n        background-color: #ffbdc4;\n        border-radius: 5px;\n    }\n\n    .bounce-enter[_v-4d5dbc41] {\n        -webkit-animation: bounce-in .3s;\n                animation: bounce-in .3s;\n    }\n    .bounce-leave[_v-4d5dbc41] {\n        -webkit-animation: bounce-out .3s;\n                animation: bounce-out .3s;\n    }\n    @-webkit-keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @-webkit-keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n    @keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n\n"] = false
     document.head.removeChild(__vueify_style__)
   })
   if (!module.hot.data) {
@@ -9844,6 +9877,57 @@ if (module.hot) {(function () {  module.hot.accept()
   }
 })()}
 },{"vue":3,"vue-hot-reload-api":2,"vueify-insert-css":4}],8:[function(require,module,exports){
+var __vueify_style__ = require("vueify-insert-css").insert("\n    .fg-float-heading {\n        font-weight:bold;\n        font-size: 1.2em;\n    }\n    .fg-float {\n        position:absolute;\n        left:0px;\n        top:0px;\n        z-index:999999;\n        border-bottom: 8px solid #8CDDFF;\n\n        background-color: #c2edff;\n        padding:12px;\n        border-radius: 5px;\n        box-shadow: 0;\n    }\n\n    .bounce-enter {\n        -webkit-animation: bounce-in .3s;\n                animation: bounce-in .3s;\n    }\n    .bounce-leave {\n        -webkit-animation: bounce-out .3s;\n                animation: bounce-out .3s;\n    }\n    @-webkit-keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @-webkit-keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n    @keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n")
+'use strict';
+
+module.exports = {
+    props: {},
+    computed: {},
+    data: function data() {
+        return {
+            mouseX: 0,
+            mouseY: 0,
+            message: "howdy",
+            show: false
+        };
+    },
+    ready: function ready() {
+        var self = this;
+        $(document).on('mousemove', function (e) {
+            self.mouseX = e.pageX;
+            self.mouseY = e.pageY;
+        });
+    },
+    events: {
+        'show-float': function showFloat(message) {
+            this.message = message;
+            this.show = true;
+        },
+        'hide-float': function hideFloat() {
+            this.show = false;
+            //this.message = "";
+        }
+    }
+
+};
+if (module.exports.__esModule) module.exports = module.exports.default
+;(typeof module.exports === "function"? module.exports.options: module.exports).template = "\n    <div class=\"fg-float\" v-bind:style=\"'left: '+ (mouseX + 30) +'px ; top: ' + (mouseY + 30) + 'px' ;\" v-if=\"show\" transition=\"bounce\">\n        <div class=\"fg-float-heading\">Preview</div>\n        <div class=\"fg-float-message\">{{{ message }}}</div>\n    </div>\n"
+if (module.hot) {(function () {  module.hot.accept()
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  var id = "/Users/connorimrie/Dropbox/Random State Software Development/FormGrabberExtension/resources/assets/js/vue/components/float.vue"
+  module.hot.dispose(function () {
+    require("vueify-insert-css").cache["\n    .fg-float-heading {\n        font-weight:bold;\n        font-size: 1.2em;\n    }\n    .fg-float {\n        position:absolute;\n        left:0px;\n        top:0px;\n        z-index:999999;\n        border-bottom: 8px solid #8CDDFF;\n\n        background-color: #c2edff;\n        padding:12px;\n        border-radius: 5px;\n        box-shadow: 0;\n    }\n\n    .bounce-enter {\n        -webkit-animation: bounce-in .3s;\n                animation: bounce-in .3s;\n    }\n    .bounce-leave {\n        -webkit-animation: bounce-out .3s;\n                animation: bounce-out .3s;\n    }\n    @-webkit-keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @keyframes bounce-in {\n        0% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n    }\n    @-webkit-keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n    @keyframes bounce-out {\n        0% {\n            -webkit-transform: scale(1);\n                    transform: scale(1);\n        }\n        50% {\n            -webkit-transform: scale(1.25);\n                    transform: scale(1.25);\n        }\n        100% {\n            -webkit-transform: scale(0);\n                    transform: scale(0);\n        }\n    }\n"] = false
+    document.head.removeChild(__vueify_style__)
+  })
+  if (!module.hot.data) {
+    hotAPI.createRecord(id, module.exports)
+  } else {
+    hotAPI.update(id, module.exports, module.exports.template)
+  }
+})()}
+},{"vue":3,"vue-hot-reload-api":2,"vueify-insert-css":4}],9:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -9864,14 +9948,17 @@ module.exports = {
     },
     events: {
         'send': function send(name, data) {
+            console.log('sending message: ' + name);
             this.send({ name: name, data: data });
         }
     },
     ready: function ready() {
         var vm = this;
         chrome.runtime.onMessage.addListener(function (event) {
-            vm.$dispatch(event.name, event.data);
-            vm.$broadcast(event.name, event.data);
+            console.log('received message: ' + event.name);
+            //                vm.$dispatch(event.name, event.data);
+            //                vm.$broadcast(event.name, event.data);
+            vm.$emit(event.name, event.data);
         });
     }
 };

@@ -7824,16 +7824,123 @@ button.close {
 .fa-percent:before {
   content: ""; }
 
+.modal-mask {
+  width: 100%;
+  height: 100%;
+  z-index: 9998;
+  background-color: rgba(0, 0, 0, 0.55);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: table;
+  transition: opacity .3s ease; }
+
+.modal-window {
+  position: absolute;
+  z-index: 9999;
+  width: 50%;
+  min-height: 200px;
+  max-height: 92%;
+  margin: auto;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%); }
+
+.modal-content {
+  padding: 20px; }
+
+@media screen and (max-width: 480px) {
+  .modal-window {
+    width: 100%; } }
+
+@media screen and (min-width: 481px) and (max-width: 900px) {
+  .modal-window {
+    width: 75%; } }
+
+html, body {
+  margin: 0; }
+
 body {
-  width: 600px;
-  max-width: 800px; }
+  width: 500px;
+  max-width: 800px;
+  padding-top: 115px; }
 
 table {
-  table-layout: fixed;
-  width: 100%; }
+  table-layout: fixed; }
 
 td {
-  overflow: scroll;
-  /* css-3 */ }
+  overflow: scroll; }
+
+table th {
+  padding-bottom: 0 !important;
+  margin-bottom: -3px; }
+
+.fg-navbar {
+  border-bottom: 8px solid #B9EB6C;
+  background-color: #d0f29c;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px; }
+
+.navbar-brand img {
+  max-width: 60px; }
+
+.logo {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  top: 15px;
+  max-width: 150px;
+  pointer-events: auto; }
+
+.logo-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none; }
+
+.logo.button:hover {
+  -webkit-filter: drop-shadow(0px 4px 3px #D9D9D9) saturate(1.9);
+  filter: drop-shadow(0px 4px 3px #D9D9D9) saturate(1.9); }
+
+#menu {
+  color: white;
+  margin-top: 25px;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-justify-content: flex-end;
+  -ms-flex-pack: end;
+  justify-content: flex-end; }
+
+.fg-dropdown-button:hover {
+  -webkit-filter: drop-shadow(0px 2px 2px #B1B4B5);
+  filter: drop-shadow(0px 2px 2px #B1B4B5); }
+
+.fg-on-top {
+  z-index: 9999; }
+
+img.logo {
+  -webkit-filter: drop-shadow(0px 4px 3px #D9D9D9);
+  filter: drop-shadow(0px 4px 3px #D9D9D9); }
+
+.grey, .grey > a {
+  color: #CCCCCC; }
+
+footer {
+  padding-bottom: 5px; }
+
+button:focus {
+  outline: 0 !important; }
 
 /*# sourceMappingURL=main.css.map */

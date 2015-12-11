@@ -1,7 +1,7 @@
 <template>
     <div class="instructions-container">
         <button id="instructions-button" class="btn btn-default fa fa-info-circle" v-on:click="show= !show"></button>
-        <div id="instructions-panel" class="row" v-show="show" transition="expand">
+        <div id="instructions-panel" class="row panel panel-default" v-show="show" transition="expand">
             <small class="col-md-12">
                 <strong>Grabbing</strong>
                 <ul>
@@ -32,6 +32,13 @@
 </template>
 
 <style>
+    .instructions-container {
+        text-align:left;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:95%;
+    }
     /*.expand-transition {*/
         /*transition: all .3s ease;*/
     /*}*/

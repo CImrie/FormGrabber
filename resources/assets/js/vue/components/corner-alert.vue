@@ -2,6 +2,7 @@
     <div v-bind:class="['fg-alert', alertClass ? alertClass : '']" v-if="show" transition="bounce">
         <div class="fg-alert-heading">{{ heading }}</div>
         <div>{{{ message }}}</div>
+        <div class="fg-alert-button" v-if="button != undefined"><button v-on:click="button.onClick">{{button.text}}</button></div>
     </div>
 </template>
 <script>
@@ -18,6 +19,9 @@
             type: {
                 type: String,
                 default: ""
+            },
+            button: {
+                type: Object
             }
         },
         computed: {
@@ -59,6 +63,28 @@
         font-weight: bold;
         padding-bottom:10px;
     }
+
+    .fg-alert-button {
+        padding-top:10px;
+    }
+
+    .fg-alert-button button{
+        padding:10px;
+        font-weight:bold;
+
+        border: 1px solid rgb(248, 101, 116);
+        background-color: rgb(255, 134, 147);
+        border-radius:3px;
+        box-shadow: 0;
+
+        pointer-events:auto;
+        cursor:pointer;
+    }
+
+    .fg-alert-button button:focus {
+        outline:0;
+    }
+
     .fg-alert {
         margin:15px;
         margin-top: 0px;

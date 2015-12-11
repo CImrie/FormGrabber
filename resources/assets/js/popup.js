@@ -1,9 +1,10 @@
 var Vue = require('vue');
-
+Vue.config.debug = true;
 /*--- Components ---*/
 var guide = require('./vue/components/guide.vue');
 var siteList = require('./vue/components/site-list.vue');
 var listeningPost = require('./vue/components/listening-post.vue');
+var dropdownButton = require('./vue/components/dropdown-button.vue');
 /*--- End Components ---*/
 
 var listenerVue = Vue.extend(listeningPost);
@@ -12,11 +13,13 @@ var vm = new listenerVue({
     components: {
         "fg-guide" : guide,
         "fg-sites" : siteList,
-        "fg-listening-post" : listeningPost
+        "fg-listening-post" : listeningPost,
+        "fg-dropdown-button": dropdownButton
     },
     data: function(){
         return {
-            sites: JSON.parse(localStorage.getItem('formgrabber-sites'))
+            sites: JSON.parse(localStorage.getItem('formgrabber-sites')),
+            validLicense: false
         }
     },
     methods: {
@@ -30,7 +33,8 @@ var vm = new listenerVue({
     },
     ready: function(){
         this.isExtension = true;
-        console.log(this.sites[0]);
+        //check for license
+        this.$emit('send', 'license-check');
     },
     events: {
         'trash-clicked': function(index){
@@ -38,6 +42,15 @@ var vm = new listenerVue({
         },
         'lock-toggled' : function(index){
             this.$emit('send', 'toggle-lock-site', index);
+        },
+        'license-checked' : function(valid){
+            if(valid){
+                this.validLicense = true;
+            }
+        },
+        'use-site' : function(site){
+            this.$emit('send', 'deploy-site', site);
+            window.close();
         }
     }
 });
