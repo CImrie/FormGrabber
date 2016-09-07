@@ -12,20 +12,22 @@
             </tr>
             </thead>
             <tbody id="sites-tbody">
-                <!--<tr v-for="site in sites" v-on:click="modalData(site)">-->
-                    <!--<td>-->
-                        <!--<button-->
-                                <!--:class="['fa', 'btn', 'btn-default', site.locked ? 'fa-lock': 'fa-unlock']"-->
-                                <!--v-on:click="toggleLock(site)"-->
-                        <!--&gt;</button>-->
-                    <!--</td>-->
-                    <!--<td class="constrain"><a href="{{site.url}}" target="_blank">{{ humanReadableUrl(site.url) }}</a></td>-->
-                    <!--<td>{{ humanReadableTime(site.added) }}</td>-->
-                    <!--<td><button class="fa fa-download btn btn-default" v-on:click="use(site)"></button></td>-->
-                    <!--<td><button class="fa fa-trash btn btn-danger" v-on:click="trash(site)"></button></td>-->
-                <!--</tr>-->
+                <tr v-for="site in sites" v-on:click.stop="modalData(site)">
+                    <td>
+                        <button
+                                :class="['fa', 'btn', 'btn-default', site.locked ? 'fa-lock': 'fa-unlock']"
+                                v-on:click.stop="toggleLock(site)"
+                        ></button>
+                    </td>
+                    <td class="constrain"><a href="{{site.url}}" target="_blank">{{ humanReadableUrl(site.url) }}</a></td>
+                    <td>{{ humanReadableTime(site.added) }}</td>
+                    <td><button class="fa fa-download btn btn-default" v-on:click.stop="use(site)"></button></td>
+                    <td><button class="fa fa-trash btn btn-danger" v-on:click.stop="trash(site)"></button></td>
+                </tr>
             </tbody>
         </table>
+        <slot></slot>
+        <fg-site-modal></fg-site-modal>
     </div>
 </template>
 <style>
@@ -50,53 +52,54 @@
 <script>
     var moment = require('moment');
     var tab = require('./partials/table-tab.vue');
+    var siteModal = require('./site-modal.vue');
 
     module.exports = {
         components: {
             "fg-table-tab": tab,
+            "fg-site-modal": siteModal
         },
-        props: ['sites'],
+        props: {
+            sites: {
+                type: Array,
+                default: function(){
+                    return [];
+                }
+            }
+        },
         methods: {
-//            'humanReadableTime': function(epoch){
-//                return moment(epoch).fromNow();
-//            },
-//            'humanReadableUrl': function(url){
-//                var parser = document.createElement('a');
-//                parser.href = url;
-//
-//                return parser.hostname;
-//            },
-//            'trash': function(site){
-//                //only if not locked
-//                if( ! site.locked ){
-//                    var index = this.sites.indexOf(site);
-//                    if(index != -1){
-//                        this.sites.splice(index, 1);
-//                        this.$dispatch('trash-clicked', index);
-//                    }
-//                }
-//            },
+            'humanReadableTime': function(epoch){
+                return moment(epoch).fromNow();
+            },
+            'humanReadableUrl': function(url){
+                var parser = document.createElement('a');
+                parser.href = url;
+
+                return parser.hostname;
+            },
+            'trash': function(site){
+                //only if not locked
+                if( ! site.locked ){
+                    var index = this.sites.indexOf(site);
+                    if(index != -1){
+                        this.sites.splice(index, 1);
+                        this.$dispatch('trash-clicked', index);
+                    }
+                }
+            },
             'trashAll': function(){
                 this.$dispatch('trash-all-clicked');
             },
-//            'use': function(site){
-//                this.$dispatch('use-site', site);
-//            },
-//            'toggleLock': function(site){
-//                var index = this.sites.indexOf(site);
-//                site.locked = ! site.locked;
-//                this.$dispatch('lock-toggled', index);
-//            },
-//            'modalData': function(site){
-//                this.$broadcast('toggle', site.data);
-//            }
-        },
-        events: {
-            'trash-clicked': function(site){
+            'use': function(site){
+                this.$dispatch('use-site', site);
+            },
+            'toggleLock': function(site){
                 var index = this.sites.indexOf(site);
-                this.sites.splice(index,1);
-
-                return true;
+                site.locked = ! site.locked;
+                this.$dispatch('lock-toggled', index);
+            },
+            'modalData': function(site){
+                this.$broadcast('show-site-modal', site);
             }
         }
     }

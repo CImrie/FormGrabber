@@ -110,7 +110,7 @@ Crawler.prototype = {
                     var count = 2;
                     var countdown = setInterval(function(){
                         if(count > 0){
-                            vue.showFloat('All done. Disappearing in ' + count + "...");
+                            vue.showFloat('All done. The script will now finish in ' + count + "...");
                             count = count -1;
                         }else{
                             vue.hideFloat();

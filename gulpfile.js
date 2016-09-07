@@ -26,9 +26,23 @@ elixir(function(mix) {
        'resources/assets/js/lib'
     , 'public/js/lib');
 
+    mix.copy(
+        'resources/assets/js/models'
+        , 'public/js/models');
+
+    mix.scripts([
+        'models/User.js',
+        'background.js'
+    ], 'public/js/background-compiled.js', 'public/js');
+
     mix.scripts([
         'lib/jquery-2.1.4.js',
         'lib/page-crawler.js',
         'page.js'
     ], 'public/js/page-compiled.js', 'public/js');
+
+    mix.scripts([
+        'lib/gAnalytics.js',
+        'popup.js'
+    ], 'public/js/popup-compiled.js', 'public/js');
 });

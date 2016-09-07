@@ -10,6 +10,7 @@
         padding: 5px 7px;
         border-top: 5px solid #B9EB6C;
         background-color: #d0f29c;
+        cursor:auto;
     }
 </style>
 <script>

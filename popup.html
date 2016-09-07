@@ -10,11 +10,14 @@
             <img class="logo button" src="public/images/fg-colour-logo-vibrant-2-aligned-01-01.png" v-if="! validLicense"/>
         </div>
         <div id="menu">
-            <fg-dropdown-button class="fg-menu-button fg-on-top"></fg-dropdown-button>
+            <fg-dropdown-button class="fg-menu-button fg-on-top" :items="dropdownItems"></fg-dropdown-button>
         </div>
     </div>
         <div class="app" v-if="validLicense">
             <fg-sites :sites="sites">
+                <!--<div class="alert alert-info" v-if="Object.keys(sites).length == 0">-->
+                    <!--Get started by clicking the logo at the top.-->
+                <!--</div>-->
             </fg-sites>
         </div>
         <div class="container error" v-if="! validLicense">
@@ -22,17 +25,24 @@
                 <h4>Your license is currently inactive.</h4>
                 <p>Here are some possible reasons for this message:</p>
                 <ul>
-                    <li>You have reached the end of your trial and have not paid the subscription fee.</li>
-                    <li>You have not had an internet connection for approximately 48hours (the app-license grace period).</li>
+                    <li>You have reached the end of your trial and have not paid the subscription fee. To pay, <strong><a href="https://chrome.google.com/webstore/detail/form-grabber/dchkbanpgboppemgcafbdbefnanhimli" target="_blank">click here</a></strong></li>
+                    <li>You do not have an active internet connection.</li>
                 </ul>
                 <hr />
-                <p><strong>If you believe this is in error please contact support at support@randomstate.co.uk</strong></p>
+                <p>If you believe this is in error please contact support at <a href="mailto:support@randomstate.co.uk" target="_blank">support@randomstate.co.uk</a></p>
             </div>
         </div>
     </div>
     <footer class="text-center">
-        <small class="grey"><a href="http://randomstate.co.uk" target="_blank">Random State</a></small>
+        <small class="grey"><a href="http://randomstate.co.uk" target="_blank">Random State</a>
+        </small>
+        <div id="instructions">
+            <button id="instructions-button" class="btn btn-info fa fa-info-circle" v-on:click.stop="toggleInstructions"></button>
+            <fg-guide></fg-guide>
+        </div>
     </footer>
 </body>
 </html>
-<footer><script src="public/js/popup.js" type="text/javascript"></script></footer>
+<footer>
+    <script src="public/js/popup-compiled.js" type="text/javascript"></script>
+</footer>

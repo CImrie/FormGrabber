@@ -86,6 +86,8 @@
     }
 
     .fg-alert {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        color:black;
         margin:15px;
         margin-top: 0px;
         padding:20px;

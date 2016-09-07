@@ -1,8 +1,8 @@
 <template>
     <div class="modal-inner-container">
-        <div class="modal-mask" v-show="show" @click="toggle">
+        <div class="modal-mask" v-if="show" @click="toggle">
         </div>
-        <div class="modal-window" v-show="show">
+        <div class="modal-window" v-if="show">
             <div class="modal-content">
                 <slot></slot>
             </div>
@@ -14,10 +14,8 @@
     module.exports = {
         data: function(){
             return {
+                show: false
             }
-        },
-        props: {
-            show: false
         },
         methods: {
             toggle: function(){
@@ -25,6 +23,12 @@
             }
         },
         events: {
+            'show': function(){
+                this.show = true;
+            },
+            'hide': function(){
+                this.show = false;
+            },
             'toggle' : function(){
                 this.toggle();
             }
